@@ -1,9 +1,5 @@
 import express from 'express';
-import { getTodo } from './todoController.js';
-import { postTodo } from './todoController.js';
-import { getSingleTodo } from './todoController.js';
-import { deleteTodo } from './todoController.js';
-import { updateTodo } from './todoController.js';
+import { getTodo, postTodo, getSingleTodo, deleteTodo, updateTodo } from './todoController.js';
 
 const router = express.Router();
 

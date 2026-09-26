@@ -1,6 +1,7 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import todoRoute from './todo/todoRoute.js';
+import categoryRoute from './category/categoryRoute.js';
 import connectDB from './config/db.js';
 
 const app = express();
@@ -8,6 +9,7 @@ dotenv.config();
 app.use(express.json());
 
 app.use('/todo', todoRoute);
+app.use('/category', categoryRoute);
 
 connectDB();
 
