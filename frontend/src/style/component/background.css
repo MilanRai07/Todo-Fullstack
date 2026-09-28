@@ -1,0 +1,5 @@
+@layer components{
+    .gradientToRight{
+        @apply bg-linear-to-br from-primary to-secondary
+    }
+}

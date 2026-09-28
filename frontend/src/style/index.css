@@ -1,0 +1,28 @@
+@import "tailwindcss";
+@import './component/background.css';
+@import './component/card.css';
+
+:root {
+  font-family: 'Poppins', sans-serif;
+  color: black;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+@theme {
+  --color-primary: #0067b0;
+  --color-dark: #002147;
+  --color-secondary: #007CC3;
+  --color-muted: #6B7280;
+  --color-lightBorder: #ebebeb;
+}
+
+body {
+  margin: 0;
+}
+
+button {
+  cursor: pointer;
+}

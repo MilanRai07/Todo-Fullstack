@@ -1,0 +1,5 @@
+@layer components {
+    .cardBox {
+        @apply rounded-md shadow-[0_0_10px_2px_rgba(0,0,0,0.1)] p-7
+    }
+}
