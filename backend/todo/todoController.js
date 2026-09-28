@@ -1,10 +1,13 @@
 import TodoModel from "./todoModel.js"
+import "../category/categoryModel.js"
 
 //to post the list
 export const postTodo = async (req, res) => {
     try {
         const todo = await TodoModel.create({
-            title: req.body.title
+            title: req.body.title,
+            category: req.body.category,
+            decription: req.body.description
         })
         res.status(201).json(todo);
     } catch (err) {
@@ -34,7 +37,8 @@ export const getTodo = async (req, res) => {
 
         const todos = await TodoModel.find(filter).
             skip(skip).
-            limit(limit);
+            limit(limit).
+            populate("category");
         const totalItem = await TodoModel.countDocuments(filter);
         const totalPage = Math.ceil(totalItem / limit);
         res.json({

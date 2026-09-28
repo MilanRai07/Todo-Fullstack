@@ -17,5 +17,8 @@
     "express": "^5.2.1",
     "mongoose": "^9.10.1",
     "nodemon": "^3.1.14"
+  },
+  "devDependencies": {
+    "migrate-mongo": "^14.0.7"
   }
 }
