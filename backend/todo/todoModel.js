@@ -9,13 +9,23 @@ export const todoSchema = new mongoose.Schema(
         },
         status: {
             type: String,
-            enum: ["pending", "complete", "processing"],
-            default: "pending"
+            enum: ["Pending", "Completed", "In Progress"],
+            default: "Pending"
         },
         category: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "Category",
             required: true
+        },
+        priority: {
+            type: String,
+            enum: ["Moderate", "High", "Low"],
+            required: true
+        },
+        image: {
+            type: String,
+            required: true,
+            trim: true,
         },
         description: {
             type: String,
