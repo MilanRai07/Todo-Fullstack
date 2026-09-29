@@ -1,32 +1,45 @@
 import TodoModel from "./todoModel.js"
 import "../category/categoryModel.js"
-import { unlink } from "node:fs/promises";
-import path from "node:path";
+import uploadToCloudinary from "../utils/cloudinary/uploadToCloudinary.js";
+import deleteFromCloudinary from "../utils/cloudinary/deleteFromCloudinary.js";
 
 //to post the list
 export const postTodo = async (req, res) => {
     if (!req.file) {
         return res.status(400).json({ message: "Image is required" });
     }
+
+    let uploadedImage = null;
+
     try {
+        // Upload image to Cloudinary
+        const result = await uploadToCloudinary(req.file.buffer);
+
+        uploadedImage = {
+            url: result.secure_url,
+            public_id: result.public_id,
+        };
+
         const todo = await TodoModel.create({
             title: req.body.title,
             category: req.body.category,
             description: req.body.description,
             priority: req.body.priority,
-            image: `/uploads/todos/${req.file.filename}`
-        })
+            image: uploadedImage,
+        });
+
         res.status(201).json(todo);
     } catch (err) {
-        if (req.file) await unlink(req.file.path).catch(() => { });
-        //Multer saves the file to disk before the controller runs. 
-        // If TodoModel.create fails (e.g. a missing title), 
-        // the image stays on the server as an orphan. so we Delete it in the catch
-        res.status(400).json({
-            message: err.message
-        })
+        //somtime the db failed to add but but the cloudinary image is uploaded before creation happens,
+        // we delete the orphaned image from Cloudinary
+        //if anyerror comes
+        if (uploadedImage?.public_id) {
+            await deleteFromCloudinary(uploadedImage.public_id).catch(() => { });
+        }
+
+        res.status(400).json({ message: err.message });
     }
-}
+};
 
 //to get the todo lists
 export const getTodo = async (req, res) => {
@@ -95,64 +108,49 @@ export const deleteTodo = async (req, res) => {
         const todo = await TodoModel.findByIdAndDelete(req.params.id);
 
         if (!todo) {
-            return res.status(404).json({
-                message: "Item not found"
-            })
+            return res.status(404).json({ message: "Item not found" });
         }
 
-        //if there is todo item and has image delete that also
-        if (todo.image?.startsWith("/uploads/todos/")) {
-            const imagePath = path.join("uploads/todos", path.basename(todo.image));
-            await unlink(imagePath).catch(() => { });
+        // If the todo had an image on Cloudinary, we delete it too
+        if (todo.image?.public_id) {
+            await deleteFromCloudinary(todo.image.public_id).catch(() => { });
         }
-        res.json({
-            message: "Item deleted successfully"
-        })
+
+        res.json({ message: "Item deleted successfully" });
     } catch (err) {
-        res.status(500).json({
-            message: err.message
-        })
+        res.status(500).json({ message: err.message });
     }
-}
+};
+
 
 //to update an item
 export const updateTodo = async (req, res) => {
-    try {
+    let uploadedImage = null;
 
-        //first we search for the item with the params.id 
-        //mongo db is searched for the item with such id
+    try {
         const existingTodo = await TodoModel.findById(req.params.id);
 
-        //what happens if it didn't find the id?
-        //even though updating failed, but but multer runs before controller runs.
-        //if user has already added a new image and hit update button,
-        //may be there is no such item id and responds "no such items"
-        //stil the new image is stored. This is not good 
-        //so, if there is req.file(new uploaded image), we delete is using unlihnk
-        //then "Item not found" is sent 
         if (!existingTodo) {
-            if (req.file) await unlink(req.file.path).catch(() => { });
-            return res.status(404).json({
-                message: "Item not found"
-            })
+            return res.status(404).json({ message: "Item not found" });
         }
 
-        //if the item is existed in database, then 
-        //catch catch all the req.body
+        //collect the body from user
         const updates = { ...req.body };
-        //example of validation
-        if (req.body.category == "") {
-            res.json({
-                message: "Category is requried"
-            })
+
+        // Example validation I can do the validfaiton from frontend also
+        if (req.body.category === "") {
+            return res.status(400).json({ message: "Category is required" });
         }
 
-        //check if user has uploaded an image
-        //if uploaded, then assign the image to updates object
-        //if it was not updated then, it is undefined
-        //the old image will be there unaltered.
+        // If user uploaded a new image, first we psh to cloudinary
         if (req.file) {
-            updates.image = `/uploads/todos/${req.file.filename}`;
+            const result = await uploadToCloudinary(req.file.buffer);
+            uploadedImage = {
+                url: result.secure_url, //url by cloudinary
+                public_id: result.public_id, //id by cloudinary
+            };
+            //add the new uploadedImage to image key.
+            updates.image = uploadedImage;
         }
 
         const todo = await TodoModel.findByIdAndUpdate(
@@ -160,32 +158,22 @@ export const updateTodo = async (req, res) => {
             updates,
             {
                 returnDocument: "after",
-                runValidators: true
+                runValidators: true,
             }
-        )
+        );
 
-        //we have already checked the existingTodo, and here also we are checking, it looks redundant
-        //but for additional safety guard
-        if (!todo) {
-            if (req.file) await unlink(req.file.path).catch(() => { });
-            return res.status(404).json({
-                message: "Item not found"
-            })
+        // If we uploaded a new image AND the old one had a Cloudinary image,
+        // delete the old one now that the DB is safely updated
+        if (uploadedImage && existingTodo.image?.public_id) {
+            await deleteFromCloudinary(existingTodo.image.public_id).catch(() => { });
         }
-
-        //now if the the user has uploaded new image and we have existing old image,
-        //we delete the old image
-        if (req.file && existingTodo.image?.startsWith("/uploads/todos/")) {
-            const oldImagePath = path.join("uploads/todos", path.basename(existingTodo.image));
-            await unlink(oldImagePath).catch(() => { });
-        }
-        //throw response, if success
-        res.json(todo)
+        res.json(todo);
     } catch (err) {
-        //again if something goes wrong in process
-        if (req.file) await unlink(req.file.path).catch(() => { });
-        res.status(500).json({
-            message: err.message
-        })
+        // if somehow db failed — 
+        // clean up the newly uploaded orphaned Cloudinary image
+        if (uploadedImage?.public_id) {
+            await deleteFromCloudinary(uploadedImage.public_id).catch(() => { });
+        }
+        res.status(500).json({ message: err.message });
     }
-}
+};

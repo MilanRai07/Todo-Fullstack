@@ -22,10 +22,18 @@ export const todoSchema = new mongoose.Schema(
             enum: ["Moderate", "High", "Low"],
             required: true
         },
+        // image: { without cloudinary
+        //     type: String,
+        //     required: true,
+        //     trim: true,
+        // },
         image: {
-            type: String,
-            required: true,
-            trim: true,
+            url: {
+                type: String,
+            },
+            public_id: {
+                type: String,
+            },
         },
         description: {
             type: String,
