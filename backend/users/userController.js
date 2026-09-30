@@ -193,3 +193,103 @@ export const login = async (req, res) => {
         });
     }
 };
+
+//forget password 
+export const forgotPassword = async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        if (!email) {
+            return res.status(400).json({
+                success: false,
+                message: "Email is required"
+            });
+        }
+
+        const user = await UserModel.findOne({ email });
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found"
+            });
+        }
+
+        // Generate reset token
+        const resetToken = generateVerificationCode();
+
+        // Store token and expiry in database
+        user.resetPasswordToken = resetToken;
+        user.resetPasswordExpiresAt = Date.now() + 15 * 60 * 1000; // 15 minutes
+
+        await user.save();
+
+        // Send reset email
+        await sendVerificationEmail(user.email, resetToken);
+
+        return res.status(200).json({
+            success: true,
+            message: "Password reset email sent successfully"
+        });
+
+    } catch (error) {
+        console.error(error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Something went wrong"
+        });
+    }
+};
+
+//reset password
+export const resetPassword = async (req, res) => {
+    try {
+        const { token, password } = req.body;
+
+        if (!token || !password) {
+            return res.status(400).json({
+                success: false,
+                message: "Token and password are required"
+            });
+        }
+
+        // Find user with valid reset token
+        const user = await UserModel.findOne({
+            resetPasswordToken: token,
+            resetPasswordExpiresAt: { $gt: Date.now() } //we can alsocheck the expiry like this
+        });
+
+        if (!user) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid or expired reset token"
+            });
+        }
+
+        // Hash new password
+        const hashedPassword = await bcryptjs.hash(password, 10);
+
+        // Update password
+        user.password = hashedPassword;
+
+        // Clear reset token after use
+        user.resetPasswordToken = undefined;
+        user.resetPasswordExpiresAt = undefined;
+
+        await user.save();
+
+        return res.status(200).json({
+            success: true,
+            message: "Password reset successfully"
+        });
+
+    } catch (error) {
+        console.error(error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Something went wrong"
+        });
+    }
+}; 

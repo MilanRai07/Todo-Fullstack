@@ -1,3 +1,4 @@
+//this is used for all the mail with verification code
 export const sendVerificationEmail = async (email, verificationToken) => {
     const res = await fetch("https://api.brevo.com/v3/smtp/email", {
         method: "POST",
