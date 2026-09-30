@@ -6,6 +6,7 @@ import multer from 'multer';
 dotenv.config();
 import todoRoute from './todo/todoRoute.js';
 import categoryRoute from './category/categoryRoute.js';
+import userRoute from './users/userRoute.js';
 import connectDB from './config/db.js';
 
 const app = express();
@@ -14,6 +15,9 @@ app.use(express.json());
 
 app.use('/todo', todoRoute);
 app.use('/category', categoryRoute);
+
+//user routes
+app.use('/auth', userRoute)
 
 // Multer error handler here beuase multer always runs befire the controller, 
 //if such error occurs we odn't call controller

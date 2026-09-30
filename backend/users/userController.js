@@ -1,0 +1,118 @@
+import { generateTokenAndSetCookie } from "../utils/verification/generateTokenAndSetCookie.js";
+import { generateVerificationCode } from "../utils/verification/generateVerificationCode.js";
+import { sendEmailVerifiedMessage } from "../utils/verification/sendEmailVerifiedMessage.js";
+import { sendVerificationEmail } from "../utils/verification/sendVerificationEmail.js";
+import UserModel from "./userModel.js";
+import bcryptjs from "bcryptjs";
+
+//Sign up user
+export const signUp = async (req, res) => {
+    const { email, password, name } = req.body
+    try {
+        if (!email || !password || !name) {
+            throw new Error("All Fields are required")
+        }
+        const userAlreadyExists = await UserModel.findOne({ email });
+        if (userAlreadyExists) {
+            return res.status(400).json({
+                success: false,
+                message: "User already exists"
+            })
+        }
+
+        const hashedPassword = await bcryptjs.hash(password, 10);
+        const verificationToken = generateVerificationCode();
+
+        //just like UserModel.create, we can also use this method.
+        //at this poin it is only store in memory
+        //making istance we get the document befire savingin db,
+        //we can perform an operation here. like tokenExpires
+        const user = new UserModel({
+            email,
+            password: hashedPassword,
+            name,
+            verificationToken,
+            verificationTokenExpiresAt: Date.now() + 15 * 60 * 1000 //24 hours
+        })
+        //user is not justan object it is mongoosh document
+
+        //here save the documents in database.
+        await user.save();
+
+        //jwt part
+        generateTokenAndSetCookie(res, user._id);
+
+        //send the verification code tomail in user's email
+        sendVerificationEmail(user.email, verificationToken)
+
+        res.status(201).json({
+            success: true,
+            message: "User created successfully",
+            user: {
+                //give
+                ...user._doc,
+                password: undefined,
+                verificationToken: undefined,
+                verificationTokenExpiresAt: undefined
+            }
+        })
+
+    } catch (err) {
+
+    }
+}
+//For verfiication of the user's form /verify-email endpoint
+//This end pont is for first time user sign up and immediately verify email only.
+//user can sign up but forget to verify email, or some internet error might come.
+//next time they will login with isVerified false.
+//he can verify the email after login also, but with another endpoint now.
+export const verifyEmail = async (req, res) => {
+    try {
+        //user sends the otp through form
+        const { token } = req.body;
+
+        // we find the user with exact same verification Token
+        const user = await UserModel.findOne({
+            verificationToken: token
+        });
+
+        //if user is not founs
+        if (!user) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid verification token"
+            });
+        }
+
+        // For checking Token Expirationƒ
+        if (user.verificationTokenExpiresAt < Date.now()) {
+            return res.status(400).json({
+                success: false,
+                message: "Verification token has expired"
+            });
+        }
+
+        // update Verify the user's email
+        user.isVerified = true;
+
+        // Remove the token after successful verification
+        user.verificationToken = undefined;
+        user.verificationTokenExpiresAt = undefined;
+
+        await user.save();
+        //save db, now user's isVerify is true
+
+        //send emil verified message
+        sendEmailVerifiedMessage(user.email);
+        res.status(200).json({
+            success: true,
+            message: "Email verified successfully"
+        });
+
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "Internal server error"
+        });
+    }
+};
