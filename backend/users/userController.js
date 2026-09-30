@@ -116,3 +116,80 @@ export const verifyEmail = async (req, res) => {
         });
     }
 };
+
+//logout
+export const logOut = async (req, res) => {
+    try {
+        res.clearCookie("token");
+
+        return res.status(200).json({
+            success: true,
+            message: "Logout successfully"
+        });
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: "Something went wrong"
+        });
+    }
+};
+
+//login
+export const login = async (req, res) => {
+    try {
+        const { email, password } = req.body;
+
+        // Check required fields
+        if (!email || !password) {
+            return res.status(400).json({
+                success: false,
+                message: "Email and password are required"
+            });
+        }
+
+        // Find user
+        const user = await UserModel.findOne({ email });
+
+        if (!user) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid email or password"
+            });
+        }
+
+        // Check password
+        const isPasswordCorrect = await bcryptjs.compare(
+            password,
+            user.password
+        );
+
+        if (!isPasswordCorrect) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid email or password"
+            });
+        }
+
+        // generate jwt and cookie
+        generateTokenAndSetCookie(res, user._id);
+
+        return res.status(200).json({
+            success: true,
+            message: "Login successful",
+            user: {
+                ...user._doc,
+                password: undefined,
+                verificationToken: undefined,
+                verificationTokenExpiresAt: undefined
+            }
+        });
+
+    } catch (error) {
+        console.error(error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Something went wrong"
+        });
+    }
+};
