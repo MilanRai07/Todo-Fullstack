@@ -1,56 +1,54 @@
 
 import { useState } from 'react';
 import { ChevronRight } from 'lucide-react';
+import { NavLink } from 'react-router-dom';
 
 const RecursiveItem = ({ item, level = 0 }) => {
     const [open, setOpen] = useState(false);
 
     const hasChildren = item.children && item.children.length > 0;
+    const itemContent = (
+        <>
+            {item.icon && <span className="shrink-0">{item.icon}</span>}
+            <span className="truncate">{item.title}</span>
+            {hasChildren ? (
+                <ChevronRight
+                    size={24}
+                    className={`shrink-0 transition-transform duration-200 ${open ? 'rotate-90' : ''}`}
+                />
+            ) : (
+                <span className="w-4 shrink-0" />
+            )}
+        </>
+    );
+    const itemClassName = (isActive = false) => `
+        flex w-full items-center gap-3 rounded-lg
+        px-3 py-2.5 text-left text-sm font-semibold text-white
+        transition-all duration-200 hover:bg-zinc-100 hover:text-primary
+        ${open || isActive ? 'bg-zinc-100 text-zinc-900' : ''}
+    `;
 
     return (
         <div className="w-full">
-            {/* Main Item */}
-            <button
-                onClick={() => hasChildren && setOpen((prev) => !prev)}
-                className={`
-                    flex w-full items-center gap-3 rounded-lg
-                    px-3 py-2.5 text-left 
-                    text-sm font-semibold text-white
-                    transition-all duration-200
-                    hover:bg-zinc-100 hover:text-primary
-                    ${open ? 'bg-zinc-100 text-zinc-900' : ''}
-                `}
-                style={{
-                    paddingLeft: `${level * 16 + 12}px`,
-                }}
-            >
-
-
-                {/* Item Icon */}
-                {item.icon && (
-                    <span className="shrink-0 ">
-                        {item.icon}
-                    </span>
-                )}
-
-                {/* Title */}
-                <span className="truncate ">
-                    {item.title}
-                </span>
-
-                {/* Expand Icon */}
-                {hasChildren ? (
-                    <ChevronRight
-                        size={24}
-                        className={`
-                            shrink-0 transition-transform duration-200
-                            ${open ? 'rotate-90' : ''}
-                        `}
-                    />
-                ) : (
-                    <span className="w-4 shrink-0" />
-                )}
-            </button>
+            {hasChildren ? (
+                <button
+                    type="button"
+                    onClick={() => setOpen((prev) => !prev)}
+                    className={itemClassName()}
+                    style={{ paddingLeft: `${level * 16 + 12}px` }}
+                    aria-expanded={open}
+                >
+                    {itemContent}
+                </button>
+            ) : (
+                <NavLink
+                    to={item.href}
+                    className={({ isActive }) => itemClassName(isActive)}
+                    style={{ paddingLeft: `${level * 16 + 12}px` }}
+                >
+                    {itemContent}
+                </NavLink>
+            )}
 
             {/* Children */}
             {open && hasChildren && (
