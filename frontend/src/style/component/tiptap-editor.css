@@ -1,0 +1,362 @@
+/* Shared colors and layout for the editor surface. */
+.tt-wrap {
+    --tt-paper: #fff;
+    --tt-ink: #111827;
+    --tt-muted: #6b7488;
+    --tt-line: #d9deea;
+    --tt-accent: #0067b0;
+    --tt-mark: #ffe58a;
+    --tt-code: #eef1f6;
+    --tt-bubble: #fff;
+    --tt-bubble-ink: #111827;
+    margin: 0 auto;
+    padding: clamp(20px, 5vw, 48px);
+    background: var(--tt-paper);
+    color: var(--tt-ink);
+    border: 1px solid var(--tt-line);
+    border-radius: 14px;
+    font-family: Literata, Georgia, serif;
+}
+
+/* Editor content */
+.tt-content .tiptap {
+    outline: none;
+    min-height: 50vh;
+    font-size: 18px;
+    line-height: 1.75;
+    margin-top:40px;
+}
+
+/* paragraph spacing */
+.tt-content .tiptap>*+* {
+    margin-top: 1.2em;
+}
+
+/* h1 heading */
+.tt-content .tiptap h1 {
+    font-size: 2.1em;
+    line-height: 1.2;
+    margin: 0;
+}
+
+/* h2 heading */
+.tt-content .tiptap h2 {
+    font-size: 1.5em;
+    line-height: 1.3;
+    margin-top: 1.4em;
+}
+
+/* h3 heading */
+.tt-content .tiptap h3 {
+    font-size: 1.25em;
+    line-height: 1.35;
+    margin-top: 1.3em;
+}
+
+/* h4 heading */
+.tt-content .tiptap h4 {
+    font-size: 1.1em;
+    line-height: 1.4;
+    margin-top: 1.2em;
+}
+
+/* blockquote */
+.tt-content .tiptap blockquote {
+    margin-left: 0;
+    padding-left: 18px;
+    border-left: 3px solid var(--tt-accent);
+    color: var(--tt-muted);
+    font-style: italic;
+}
+
+/* inline code */
+.tt-content .tiptap code {
+    font: 0.85em ui-monospace, Menlo, monospace;
+    background: var(--tt-code);
+    padding: 2px 5px;
+    border-radius: 5px;
+}
+
+/* code block */
+.tt-content .tiptap pre {
+    background: var(--tt-code);
+    padding: 14px;
+    border-radius: 10px;
+    overflow-x: auto;
+}
+
+.tt-content .tiptap pre code {
+    padding: 0;
+}
+
+/* links */
+.tt-content .tiptap a {
+    color: var(--tt-accent);
+    text-underline-offset: 3px;
+}
+
+/* Highlight marks and list indentation inside the document. */
+.tt-content .tiptap mark {
+    background: var(--tt-mark);
+    color: inherit;
+    border-radius: 3px;
+    padding: 0 2px;
+}
+
+.tt-content .tiptap ul,
+.tt-content .tiptap ol {
+    padding-left: 1.4em;
+    list-style-position: outside;
+}
+
+.tt-content .tiptap ul {
+    list-style-type: disc;
+}
+
+.tt-content .tiptap ol {
+    list-style-type: decimal;
+}
+
+/* Task lists use native checkboxes and align their text with regular paragraphs. */
+.tt-content .tiptap ul[data-type="taskList"] {
+    list-style: none;
+    padding-left: 0;
+}
+
+.tt-content .tiptap li[data-type="taskItem"] {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.tt-content .tiptap li[data-type="taskItem"] > label {
+    flex: 0 0 auto;
+    margin-top: 0.25em;
+    user-select: none;
+}
+
+.tt-content .tiptap li[data-type="taskItem"] > label input {
+    accent-color: var(--tt-accent);
+}
+
+.tt-content .tiptap li[data-type="taskItem"] > div {
+    flex: 1;
+    min-width: 0;
+}
+
+.tt-content .tiptap li[data-type="taskItem"] > div > p {
+    margin: 0;
+}
+
+/* Tables keep consistent cell borders and distinguish header cells. */
+.tt-content .tiptap table {
+    width: 100%;
+    margin: 1.2em 0;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+.tt-content .tiptap th,
+.tt-content .tiptap td {
+    min-width: 1em;
+    padding: 8px 10px;
+    border: 1px solid var(--tt-line);
+    vertical-align: top;
+    position: relative;
+}
+
+.tt-content .tiptap th {
+    background: #f3f4f6;
+    font-weight: 600;
+    text-align: left;
+}
+
+.tt-content .tiptap .selectedCell::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 103, 176, 0.12);
+    pointer-events: none;
+}
+
+/* Show the configured placeholder only while the editor is empty. */
+.tt-content .tiptap p.is-editor-empty:first-child::before {
+    content: attr(data-placeholder);
+    color: var(--tt-muted);
+    float: left;
+    height: 0;
+    pointer-events: none;
+}
+
+.tt-count {
+    margin-top: 24px;
+    font: 500 12px Inter, system-ui, sans-serif;
+    color: var(--tt-muted);
+}
+
+/* Keep formatting controls visible above the editor while scrolling. */
+.tt-toolbar {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    margin-bottom: 16px;
+    padding: 9px;
+    background: var(--tt-bubble);
+    color: var(--tt-bubble-ink);
+    border: 1px solid var(--tt-line);
+    border-radius: 10px;
+    box-shadow: 0 4px 14px rgba(10, 15, 40, 0.1);
+    font: 600 13px Inter, system-ui, sans-serif;
+    max-width: 100%;
+}
+
+.tt-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+/* Text-style dropdown matches the table menu and toolbar controls. */
+.tt-toolbar .tt-style-trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    min-width: 120px;
+    height: 32px;
+    padding: 0 8px;
+    border: 0;
+    border-radius: 7px;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+}
+
+.tt-toolbar .tt-style-trigger:hover {
+    background: rgba(127, 135, 170, 0.25);
+}
+
+/* Toolbar buttons share the toolbar text color; .on marks the active format. */
+.tt-toolbar button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    min-width: 32px;
+    height: 32px;
+    padding: 0 8px;
+    border: 0;
+    border-radius: 7px;
+    background: none;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+}
+
+.tt-toolbar button:hover {
+    background: rgba(127, 135, 170, 0.25);
+}
+
+.tt-toolbar button.on {
+    background: #e5e7eb;
+    color: #111827;
+}
+
+.tt-dropdown {
+    position: relative;
+}
+
+.tt-dropdown-menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    z-index: 40;
+    width: 210px;
+    max-width: calc(100vw - 32px);
+    padding: 6px;
+    background: #fff;
+    color: #111827;
+    border: 1px solid var(--tt-line);
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(10, 15, 40, 0.14);
+}
+
+.tt-dropdown-menu-label {
+    margin: 4px 8px 6px;
+    color: var(--tt-muted);
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.tt-toolbar .tt-dropdown-menu button {
+    display: flex;
+    width: 100%;
+    height: 34px;
+    justify-content: flex-start;
+    padding: 0 8px;
+    border-radius: 6px;
+    font-weight: 500;
+    text-align: left;
+}
+
+.tt-toolbar .tt-dropdown-menu button:hover {
+    background: #f3f4f6;
+}
+
+.tt-toolbar .tt-dropdown-menu button[aria-checked="true"] {
+    background: #f3f4f6;
+}
+
+.tt-toolbar .tt-dropdown-menu .tt-dropdown-menu-danger {
+    color: #b42318;
+}
+
+.tt-sep {
+    width: 1px;
+    height: 18px;
+    background: currentColor;
+    opacity: 0.25;
+    margin: 0 3px;
+}
+
+/* Link input appears in the toolbar while the user edits a link. */
+.tt-toolbar input {
+    height: 32px;
+    width: 200px;
+    border: 0;
+    border-radius: 7px;
+    padding: 0 10px;
+    font: inherit;
+    font-weight: 500;
+    background: rgba(127, 135, 170, 0.25);
+    color: inherit;
+    outline: none;
+}
+
+.tt-toolbar input::placeholder {
+    color: inherit;
+    opacity: 0.6;
+}
+
+@media (max-width: 640px) {
+    .tt-toolbar {
+        padding: 6px;
+    }
+
+    .tt-sep {
+        display: none;
+    }
+
+    .tt-style-trigger {
+        min-width: 112px;
+    }
+}
+
+.tt-toolbar button:focus-visible,
+.tt-style-trigger:focus-visible,
+.tt-toolbar input:focus-visible {
+    outline: 2px solid var(--tt-accent);
+    outline-offset: 1px;
+}
