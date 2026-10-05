@@ -43,7 +43,7 @@ export const NavbarItem = [
             {
                 icon: <UserRoundPen />,
                 title: "Profile Edit",
-                href: "/profile-edit",
+                href: "/profile",
             },
             {
                 icon: <KeyRound />,

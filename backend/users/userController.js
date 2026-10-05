@@ -292,4 +292,56 @@ export const resetPassword = async (req, res) => {
             message: "Something went wrong"
         });
     }
-}; 
+};
+
+export const checkAuth = async (req, res) => {
+    //after verifyToken middleware, we can access the userId from req.userId
+    try {
+        const userId = req.userId;
+        const user = await UserModel.findById(userId).select('-password -verificationToken -verificationTokenExpiresAt -resetPasswordToken -resetPasswordExpiresAt');
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found"
+            });
+        }
+        return res.status(200).json({
+            success: true,
+            user
+        });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            success: false,
+            message: "Something went wrong"
+        });
+    }
+};
+
+//seperate verify email after login, if user forget to verify email after signup, or some internet error might come.
+export const verifyEmailAfterLogin = async (req, res) => {
+    const { email } = req.body;
+    try {
+        const user = await UserModel.findOne({ email });
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found"
+            });
+        }
+        const verificationToken = generateVerificationCode();
+        user.verificationToken = verificationToken;
+        user.verificationTokenExpiresAt = Date.now() + 15 * 60 * 1000; //15 minutes
+        await user.save();
+        sendVerificationEmail(user.email, verificationToken);
+        res.status(200).json({
+            success: true,
+            message: "Verification email sent successfully"
+        });
+    } catch (err) {
+        res.status(500).json({
+            success: false,
+            message: "Internal server error"
+        });
+    }
+}
