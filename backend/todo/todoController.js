@@ -1,5 +1,6 @@
+import mongoose from "mongoose";
 import TodoModel from "./todoModel.js"
-import "../category/categoryModel.js"
+import CategoryModel from "../category/categoryModel.js";
 import uploadToCloudinary from "../utils/cloudinary/uploadToCloudinary.js";
 import deleteFromCloudinary from "../utils/cloudinary/deleteFromCloudinary.js";
 
@@ -12,6 +13,18 @@ export const postTodo = async (req, res) => {
     let uploadedImage = null;
 
     try {
+        if (!req.body.category) {
+            return res.status(400).json({ message: "Category is required" });
+        }
+
+        const category = await CategoryModel.findOne({
+            _id: req.body.category,
+            userId: req.userId
+        });
+        if (!category) {
+            return res.status(400).json({ message: "Category not found" });
+        }
+
         // Upload image to Cloudinary
         const result = await uploadToCloudinary(req.file.buffer);
 
@@ -26,6 +39,7 @@ export const postTodo = async (req, res) => {
             description: req.body.description,
             priority: req.body.priority,
             image: uploadedImage,
+            userId: req.userId // Assign the userId from the request (set by verifyToken middleware)
         });
 
         res.status(201).json(todo);
@@ -58,6 +72,7 @@ export const getTodo = async (req, res) => {
         if (status) {
             filter.status = status
         }
+        filter.userId = req.userId; // Filter todos by the authenticated user's ID
 
         const todos = await TodoModel.find(filter).
             sort({ createdAt: sort }).
@@ -88,7 +103,10 @@ export const getTodo = async (req, res) => {
 //to get single
 export const getSingleTodo = async (req, res) => {
     try {
-        const todo = await TodoModel.findById(req.params.id);
+        const todo = await TodoModel.findOne({
+            _id: req.params.id,
+            userId: req.userId,
+        });
         if (!todo) {
             return res.status(404).json({
                 message: "Todo item not found"
@@ -105,8 +123,10 @@ export const getSingleTodo = async (req, res) => {
 //to delete an item
 export const deleteTodo = async (req, res) => {
     try {
-        const todo = await TodoModel.findByIdAndDelete(req.params.id);
-
+        const todo = await TodoModel.findOneAndDelete({
+            _id: req.params.id,
+            userId: req.userId,
+        });
         if (!todo) {
             return res.status(404).json({ message: "Item not found" });
         }
@@ -128,7 +148,10 @@ export const updateTodo = async (req, res) => {
     let uploadedImage = null;
 
     try {
-        const existingTodo = await TodoModel.findById(req.params.id);
+        const existingTodo = await TodoModel.findOne({
+            _id: req.params.id,
+            userId: req.userId,
+        });
 
         if (!existingTodo) {
             return res.status(404).json({ message: "Item not found" });
@@ -136,10 +159,24 @@ export const updateTodo = async (req, res) => {
 
         //collect the body from user
         const updates = { ...req.body };
+        delete updates.userId;
 
         // Example validation I can do the validfaiton from frontend also
         if (req.body.category === "") {
             return res.status(400).json({ message: "Category is required" });
+        }
+        if (req.body.category !== undefined) {
+            if (!mongoose.isValidObjectId(req.body.category)) {
+                return res.status(400).json({ message: "Invalid category" });
+            }
+
+            const category = await CategoryModel.findOne({
+                _id: req.body.category,
+                userId: req.userId
+            });
+            if (!category) {
+                return res.status(400).json({ message: "Category not found" });
+            }
         }
 
         // If user uploaded a new image, first we psh to cloudinary
@@ -153,8 +190,11 @@ export const updateTodo = async (req, res) => {
             updates.image = uploadedImage;
         }
 
-        const todo = await TodoModel.findByIdAndUpdate(
-            req.params.id,
+        const todo = await TodoModel.findOneAndUpdate(
+            {
+                _id: req.params.id,
+                userId: req.userId,
+            },
             updates,
             {
                 returnDocument: "after",

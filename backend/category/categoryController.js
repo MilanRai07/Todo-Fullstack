@@ -3,7 +3,8 @@ import CategoryModel from "./categoryModel.js"
 export const postCategory = async (req, res) => {
     try {
         const category = await CategoryModel.create({
-            title: req.body.title
+            title: req.body.title,
+            userId: req.userId
         })
         res.status(201).json(category)
     } catch (err) {
@@ -21,7 +22,7 @@ export const postCategory = async (req, res) => {
 
 export const getCategory = async (req, res) => {
     try {
-        const categories = await CategoryModel.find();
+        const categories = await CategoryModel.find({ userId: req.userId });
         res.json({
             success: true,
             data: categories
@@ -36,8 +37,10 @@ export const getCategory = async (req, res) => {
 
 export const deleteCategory = async (req, res) => {
     try {
-        const deletedCatgory = await CategoryModel.findByIdAndDelete(req.params.id);
-        console.log(req.params.id)
+        const deletedCatgory = await CategoryModel.findOneAndDelete({
+            _id: req.params.id,
+            userId: req.userId
+        });
 
         if (!deletedCatgory) {
             return res.status(404).json({
@@ -48,7 +51,7 @@ export const deleteCategory = async (req, res) => {
             message: 'item deleted successfully'
         })
     } catch (err) {
-        req.status(400).json({
+        res.status(400).json({
             message: err.message
         })
     }
@@ -56,9 +59,9 @@ export const deleteCategory = async (req, res) => {
 
 export const updateCategory = async (req, res) => {
     try {
-        const updatedCategory = await CategoryModel.findByIdAndUpdate(
-            req.params.id,
-            req.body,
+        const updatedCategory = await CategoryModel.findOneAndUpdate(
+            { _id: req.params.id, userId: req.userId },
+            { title: req.body.title },
             {
                 returnDocument: "after",
                 runValidators: true

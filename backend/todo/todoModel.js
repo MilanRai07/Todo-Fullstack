@@ -17,6 +17,13 @@ export const todoSchema = new mongoose.Schema(
             ref: "Category",
             required: true
         },
+
+        //userId is the id of the user who created the todo item,
+        userId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+            required: true
+        },
         priority: {
             type: String,
             enum: ["Moderate", "High", "Low"],
