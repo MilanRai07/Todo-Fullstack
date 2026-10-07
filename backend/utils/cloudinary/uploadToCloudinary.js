@@ -1,11 +1,11 @@
 import cloudinary from "../../config/cloudinary.js";
 
 
-const uploadToCloudinary = (buffer) => {
+const uploadToCloudinary = (buffer, folder = "todos") => {
     return new Promise((resolve, reject) => {
         const stream = cloudinary.uploader.upload_stream(
             {
-                folder: "todos",
+                folder,
                 resource_type: "image"
             },
             (error, result) => {

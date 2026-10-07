@@ -8,7 +8,8 @@ import ResetPassword from './ResetPassword'
 
 const AuthPage = () => {
     const [view, setView] = useState('login')
-    const [signupEmail, setSignupEmail] = useState('')
+    const [signedEmail, setSignedEmail] = useState('')
+    const [resetEmail, setResetEmail] = useState('')
 
     const viewTitles = {
         login: 'Log in to ToDo',
@@ -18,10 +19,6 @@ const AuthPage = () => {
         resetPassword: 'Reset your password',
     }
 
-    const handleSignup = (email) => {
-        setSignupEmail(email)
-        setView('verifyEmail')
-    }
 
     return (
         <main className='min-h-screen bg-[#f0f2f5] px-6 py-12 sm:px-10'>
@@ -53,21 +50,22 @@ const AuthPage = () => {
                             />
                         )}
                         {view === 'signup' && (
-                            <Signup onSubmit={handleSignup} setView={setView} />
+                            <Signup setView={setView} setSignedEmail={setSignedEmail} />
                         )}
                         {view === 'forgotPassword' && (
                             <ForgotPassword
                                 setView={setView}
+                                setResetEmail={setResetEmail}
                             />
                         )}
                         {view === 'verifyEmail' && (
                             <OtpEmailVerification
-                                email={signupEmail}
+                                email={signedEmail}
                                 setView={setView}
                             />
                         )}
                         {view === 'resetPassword' && (
-                            <ResetPassword setView={setView} />
+                            <ResetPassword setView={setView} email={resetEmail} />
                         )}
                     </div>
                     {view === 'login' && (

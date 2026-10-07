@@ -1,18 +1,32 @@
 import { useState } from 'react'
 import { AlertTriangle } from 'lucide-react'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useNavigate } from 'react-router-dom'
+import { toast } from 'react-toastify'
+import { deleteProfile } from '../../service/users/deleteProfile'
 
 const confirmationPhrase = 'DELETE MY PROFILE'
 
 const DeleteProfile = () => {
     const [confirmationText, setConfirmationText] = useState('')
-    const [message, setMessage] = useState('')
+    const queryClient = useQueryClient()
+    const navigate = useNavigate()
     const isConfirmationValid = confirmationText === confirmationPhrase
+    const { mutate, isPending } = useMutation({
+        mutationFn: deleteProfile,
+        onSuccess: (data) => {
+            queryClient.setQueryData(['currentUser'], { success: false })
+            toast.success(data.message)
+            navigate('/login', { replace: true })
+        },
+        onError: (error) => toast.error(error.message || 'Unable to delete profile')
+    })
 
     const handleSubmit = (event) => {
         event.preventDefault()
         if (!isConfirmationValid) return
 
-        setMessage('Profile deletion is not connected to the server yet.')
+        mutate()
     }
 
     return (
@@ -40,10 +54,7 @@ const DeleteProfile = () => {
                             id='delete-confirmation'
                             type='text'
                             value={confirmationText}
-                            onChange={(event) => {
-                                setConfirmationText(event.target.value)
-                                setMessage('')
-                            }}
+                            onChange={(event) => setConfirmationText(event.target.value)}
                             className='w-full min-h-11.5 sm:min-h-12.5 min-w-50 px-3.5 sm:px-4 bg-white border rounded-xl text-left transition-all duration-200 outline-none focus:outline-none focus-visible:outline-none focus:ring-0 border-gray-300 focus:border-primary hover:border-gray-400'
                             autoComplete='off'
                         />
@@ -51,13 +62,11 @@ const DeleteProfile = () => {
 
                     <button
                         type='submit'
-                        disabled={!isConfirmationValid}
+                        disabled={!isConfirmationValid || isPending}
                         className='rounded-md bg-red-600 px-4 py-2 font-semibold text-white transition-colors hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50'
                     >
-                        Delete Profile
+                        {isPending ? 'Deleting Profile...' : 'Delete Profile'}
                     </button>
-
-                    {message && <p role='alert' className='text-sm font-medium text-red-700'>{message}</p>}
                 </form>
             </div>
         </main>

@@ -1,14 +1,24 @@
 import { Mail } from 'lucide-react'
 import { useState } from 'react'
+import { useMutation } from '@tanstack/react-query'
+import { toast } from 'react-toastify'
+import { requestPasswordReset } from '../../service/users/passwordRecovery'
 
-const ForgotPassword = ({ setView }) => {
-    const [error, setError] = useState('')
-    const [isSubmitting, setIsSubmitting] = useState(false)
+const ForgotPassword = ({ setView, setResetEmail }) => {
+    const [email, setEmail] = useState('')
+    const { mutate, isPending } = useMutation({
+        mutationFn: requestPasswordReset,
+        onSuccess: (data) => {
+            setResetEmail(email.trim())
+            toast.success(data.message)
+            setView('resetPassword')
+        },
+        onError: (error) => toast.error(error.message || 'Unable to send reset code')
+    })
 
-    const handleSubmit = async (event) => {
+    const handleSubmit = (event) => {
         event.preventDefault()
-        setError('')
-        setView('resetPassword')
+        mutate(email.trim())
     }
 
     return (
@@ -20,13 +30,21 @@ const ForgotPassword = ({ setView }) => {
                 <label className='relative block'>
                     <span className='sr-only'>Email address</span>
                     <Mail size={19} aria-hidden='true' className='pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#8a8d91]' />
-                    <input type='email' name='email' autoComplete='email' required placeholder='Email address' className='formInput pl-12' />
+                    <input
+                        type='email'
+                        name='email'
+                        autoComplete='email'
+                        required
+                        value={email}
+                        onChange={(event) => setEmail(event.target.value)}
+                        placeholder='Email address'
+                        className='formInput pl-12'
+                    />
                 </label>
-                <button type='submit' disabled={isSubmitting} className='h-12.5 w-full rounded-md bg-primary text-xl font-bold text-white transition-colors hover:bg-secondary disabled:cursor-wait disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'>
-                    {isSubmitting ? 'Sending...' : 'Send reset code'}
+                <button type='submit' disabled={isPending} className='h-12.5 w-full rounded-md bg-primary text-xl font-bold text-white transition-colors hover:bg-secondary disabled:cursor-wait disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'>
+                    {isPending ? 'Sending...' : 'Send reset code'}
                 </button>
             </form>
-            {error && <p role='alert' className='mt-3 text-sm text-red-600'>{error}</p>}
             <button type='button' onClick={() => setView('login')} className='mt-4 block w-full text-center text-sm font-medium text-primary hover:underline'>
                 Back to log in
             </button>

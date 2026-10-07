@@ -1,44 +1,69 @@
 import { useEffect, useRef, useState } from 'react'
 import { UserShield } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { useProfileEdit } from '../../service/users/profileEdit'
+import { useProfileImageEdit } from '../../service/users/profileImageEdit'
+import { toast } from 'react-toastify'
+import { useCurrentUser } from '../../hooks/useCurrentUserHook'
 
 const inputClassName = `w-full min-h-[46px] sm:min-h-[50px] min-w-[200px] px-3.5 sm:px-4 bg-white border
     rounded-xl text-left transition-all duration-200 outline-none
     focus:outline-none focus-visible:outline-none focus:ring-0 border-gray-300 focus:border-primary hover:border-gray-400`
 
 const ProfileEdit = ({ setShowEdit }) => {
+    const { mutateAsync: editProfile, isPending: isProfilePending } = useProfileEdit();
+    const { mutateAsync: editProfileImage, isPending: isImagePending } = useProfileImageEdit();
+    const { data } = useCurrentUser();
     const navigate = useNavigate()
     const [formData, setFormData] = useState({
-        name: 'Milan Rai',
-        email: 'milan@gmail.com',
-        image: null,
+        name: null,
+        email: null,
     })
     const [imagePreview, setImagePreview] = useState('')
+    const [selectedImage, setSelectedImage] = useState(null)
     const fileInputRef = useRef(null)
+    const isPending = isProfilePending || isImagePending;
 
     useEffect(() => {
-        if (!formData.image) {
-            setImagePreview('')
-            return undefined
+        return () => {
+            if (imagePreview) {
+                URL.revokeObjectURL(imagePreview)
+            }
         }
+    }, [imagePreview])
 
-        const previewUrl = URL.createObjectURL(formData.image)
-        setImagePreview(previewUrl)
-        return () => URL.revokeObjectURL(previewUrl)
-    }, [formData.image])
-
-    const getProfileImageUrl = () => imagePreview || '/img1.jpeg'
+    const getProfileImageUrl = () => imagePreview || data?.user?.profileImage?.url || '/img1.jpeg'
 
     const handleFileChange = (event) => {
         const image = event.target.files?.[0]
         if (image) {
-            setFormData((currentFormData) => ({ ...currentFormData, image }))
+            setSelectedImage(image)
+            setImagePreview(URL.createObjectURL(image))
         }
     }
 
-    const handleSubmit = (event) => {
+    const handleSubmit = async (event) => {
         event.preventDefault()
-        console.log(formData)
+        const name = (formData.name ?? data?.user?.name ?? '').trim();
+        const email = (formData.email ?? data?.user?.email ?? '').trim();
+
+        if (!name || !email) {
+            toast.error("Name and email are required")
+            return
+        }
+
+        try {
+            await editProfile({ name, email });
+            if (selectedImage) {
+                const imageData = new FormData();
+                imageData.append('image', selectedImage);
+                await editProfileImage(imageData);
+            }
+            toast.success("Profile updated successfully")
+            setShowEdit?.(false)
+        } catch (error) {
+            toast.error(error?.message || "Unable to edit profile")
+        }
     }
 
     const handleBack = () => {
@@ -103,13 +128,13 @@ const ProfileEdit = ({ setShowEdit }) => {
                             id='profile-name'
                             name='name'
                             type='text'
-                            value={formData.name}
+                            value={formData.name ?? data?.user?.name ?? ''}
                             onChange={(event) => setFormData({ ...formData, name: event.target.value })}
                             className={inputClassName}
                             placeholder='Enter your name'
                         />
                     </div>
-                    <div className='flex-1 '> 
+                    <div className='flex-1 '>
                         <label htmlFor='profile-email' className='mb-2 block text-sm font-semibold text-gray-800'>
                             Email Address
                         </label>
@@ -117,7 +142,7 @@ const ProfileEdit = ({ setShowEdit }) => {
                             id='profile-email'
                             name='email'
                             type='email'
-                            value={formData.email}
+                            value={formData.email ?? data?.user?.email ?? ''}
                             onChange={(event) => setFormData({ ...formData, email: event.target.value })}
                             className={inputClassName}
                             placeholder='Enter your email address'
@@ -128,9 +153,10 @@ const ProfileEdit = ({ setShowEdit }) => {
                 <div className='flex justify-end'>
                     <button
                         type='submit'
+                        disabled={isPending}
                         className='rounded-md bg-primary px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-secondary'
                     >
-                        Save Changes
+                        {isPending ? 'Saving...' : 'Save Changes'}
                     </button>
                 </div>
             </form>

@@ -2,7 +2,7 @@ import express from 'express';
 import dotenv from 'dotenv';
 import multer from 'multer';
 import cookieParser from 'cookie-parser';
-
+import cors from "cors";
 
 dotenv.config();
 
@@ -13,6 +13,16 @@ import connectDB from './config/db.js';
 
 
 const app = express();
+const allowedOrigins = (process.env.CORS_ORIGINS || 'http://localhost:5173')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+
+app.use(cors({
+    origin: allowedOrigins,
+    credentials: true,
+}));
+
 app.use(cookieParser()); // is middleware that allows Express to read cookies sent by the browser.
 
 app.use(express.json()); //middleware that allows your server to read JSON data sent in the request body.
@@ -51,7 +61,6 @@ connectDB();
 app.get('/', (req, res) => {
     res.send('to do app is running');
 });
-
 const PORT = process.env.PORT || 3001;
 
 app.listen(PORT, () => {

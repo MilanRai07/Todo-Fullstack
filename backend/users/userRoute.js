@@ -1,6 +1,7 @@
 import express from 'express';
-import { forgotPassword, login, logOut, resetPassword, signUp, verifyEmail, checkAuth, verifyEmailAfterLogin } from './userController.js';
+import { forgotPassword, login, logOut, resetPassword, changePassword, signUp, verifyEmail, checkAuth, verifyEmailAfterLogin, profileEdit, profileImageEdit, deleteProfile } from './userController.js';
 import { verifyToken } from '../middleware/verifyToken.js';
+import upload from '../middleware/upload.js';
 const router = express.Router()
 
 //user auth
@@ -13,6 +14,10 @@ router.post('/logout', logOut);
 router.post('/login', login);
 router.post('/forgot-password', forgotPassword);
 router.post('/reset-password', resetPassword);
-router.post('/send-email-token', verifyEmailAfterLogin);
+router.put('/change-password', verifyToken, changePassword);
+router.post('/send-email-token', verifyToken, verifyEmailAfterLogin);
+router.put('/profile-edit', verifyToken, profileEdit)
+router.put('/profile-image-edit', verifyToken, upload.single('image'), profileImageEdit)
+router.delete('/profile', verifyToken, deleteProfile)
 
 export default router;

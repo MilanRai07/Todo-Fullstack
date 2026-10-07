@@ -2,6 +2,10 @@ import { generateTokenAndSetCookie } from "../utils/verification/generateTokenAn
 import { generateVerificationCode } from "../utils/verification/generateVerificationCode.js";
 import { sendEmailVerifiedMessage } from "../utils/verification/sendEmailVerifiedMessage.js";
 import { sendVerificationEmail } from "../utils/verification/sendVerificationEmail.js";
+import uploadToCloudinary from "../utils/cloudinary/uploadToCloudinary.js";
+import deleteFromCloudinary from "../utils/cloudinary/deleteFromCloudinary.js";
+import TodoModel from "../todo/todoModel.js";
+import CategoryModel from "../category/categoryModel.js";
 import UserModel from "./userModel.js";
 import bcryptjs from "bcryptjs";
 
@@ -294,6 +298,49 @@ export const resetPassword = async (req, res) => {
     }
 };
 
+//change password for an authenticated user
+export const changePassword = async (req, res) => {
+    try {
+        const { currentPassword, newPassword } = req.body;
+        if (!currentPassword || !newPassword) {
+            return res.status(400).json({
+                success: false,
+                message: "Current and new passwords are required"
+            });
+        }
+
+        const user = await UserModel.findById(req.userId);
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found"
+            });
+        }
+
+        const isCurrentPasswordCorrect = await bcryptjs.compare(currentPassword, user.password);
+        if (!isCurrentPasswordCorrect) {
+            return res.status(400).json({
+                success: false,
+                message: "Current password is incorrect"
+            });
+        }
+
+        user.password = await bcryptjs.hash(newPassword, 10);
+        await user.save();
+
+        return res.status(200).json({
+            success: true,
+            message: "Password changed successfully"
+        });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            success: false,
+            message: "Something went wrong"
+        });
+    }
+};
+
 export const checkAuth = async (req, res) => {
     //after verifyToken middleware, we can access the userId from req.userId
     try {
@@ -320,28 +367,204 @@ export const checkAuth = async (req, res) => {
 
 //seperate verify email after login, if user forget to verify email after signup, or some internet error might come.
 export const verifyEmailAfterLogin = async (req, res) => {
-    const { email } = req.body;
     try {
-        const user = await UserModel.findOne({ email });
+        const user = await UserModel.findById(req.userId);
         if (!user) {
             return res.status(404).json({
                 success: false,
                 message: "User not found"
             });
         }
+        if (user.isVerified) {
+            return res.status(400).json({
+                success: false,
+                message: "Email is already verified"
+            });
+        }
+
         const verificationToken = generateVerificationCode();
         user.verificationToken = verificationToken;
         user.verificationTokenExpiresAt = Date.now() + 15 * 60 * 1000; //15 minutes
         await user.save();
-        sendVerificationEmail(user.email, verificationToken);
-        res.status(200).json({
+        await sendVerificationEmail(user.email, verificationToken);
+        return res.status(200).json({
             success: true,
             message: "Verification email sent successfully"
         });
     } catch (err) {
-        res.status(500).json({
+        console.error(err);
+        return res.status(500).json({
             success: false,
             message: "Internal server error"
         });
     }
 }
+
+//profileEdit
+export const profileEdit = async (req, res) => {
+    try {
+        const { name, email } = req.body;
+        const userId = req.userId;
+
+        if (!name || !email) {
+            return res.status(400).json({
+                success: false,
+                message: "Name and email are required"
+            });
+        }
+
+        const existingUser = await UserModel.findById(userId);
+        if (!existingUser) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found"
+            });
+        }
+
+        const updatedUser = await UserModel.findByIdAndUpdate(
+            userId,
+            {
+                $set: {
+                    name,
+                    email,
+                    isVerified: email === existingUser.email ? existingUser.isVerified : false
+                }
+            },
+            {
+                new: true,
+                runValidators: true
+            }
+        ).select("-password -verificationToken -verificationTokenExpiresAt -resetPasswordToken -resetPasswordExpiresAt");
+
+        if (!updatedUser) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found"
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Profile updated successfully",
+            user: updatedUser
+        });
+    } catch (err) {
+        return res.status(500).json({
+            success: false,
+            message: "Something went wrong",
+            error: err.message
+        });
+    }
+};
+
+//profile Picture Edit
+export const profileImageEdit = async (req, res) => {
+    let uploadedImage = null;
+    let imageSaved = false;
+
+    try {
+        if (!req.file) {
+            return res.status(400).json({
+                success: false,
+                message: "Profile image is required"
+            });
+        }
+
+        const existingUser = await UserModel.findById(req.userId);
+        if (!existingUser) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found"
+            });
+        }
+
+        const result = await uploadToCloudinary(req.file.buffer, "profile-images");
+        uploadedImage = {
+            url: result.secure_url,
+            public_id: result.public_id
+        };
+
+        const oldPublicId = existingUser.profileImage?.public_id;
+        existingUser.profileImage = uploadedImage;
+        await existingUser.save();
+        imageSaved = true;
+
+        if (oldPublicId && oldPublicId !== uploadedImage.public_id) {
+            try {
+                await deleteFromCloudinary(oldPublicId);
+            } catch (error) {
+                console.error("Failed to delete previous profile image:", error);
+            }
+        }
+
+        const updatedUser = await UserModel.findById(req.userId)
+            .select("-password -verificationToken -verificationTokenExpiresAt -resetPasswordToken -resetPasswordExpiresAt");
+
+        return res.status(200).json({
+            success: true,
+            message: "Profile image updated successfully",
+            user: updatedUser
+        });
+    } catch (err) {
+        if (uploadedImage?.public_id && !imageSaved) {
+            try {
+                await deleteFromCloudinary(uploadedImage.public_id);
+            } catch (error) {
+                console.error("Failed to clean up profile image upload:", error);
+            }
+        }
+        console.error("Failed to update profile image:", err);
+        return res.status(500).json({
+            success: false,
+            message: "Something went wrong",
+            error: err.message
+        });
+    }
+}
+
+export const deleteProfile = async (req, res) => {
+    try {
+        const user = await UserModel.findById(req.userId);
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found"
+            });
+        }
+
+        const todos = await TodoModel.find({ userId: req.userId }).select("image.public_id");
+        await TodoModel.deleteMany({ userId: req.userId });
+        await CategoryModel.deleteMany({ userId: req.userId });
+        await UserModel.deleteOne({ _id: req.userId });
+
+        const imagePublicIds = [
+            ...todos.map((todo) => todo.image?.public_id),
+            user.profileImage?.public_id
+        ].filter(Boolean);
+        const cleanupErrors = [];
+
+        for (const publicId of imagePublicIds) {
+            try {
+                await deleteFromCloudinary(publicId);
+            } catch (error) {
+                console.error(`Failed to delete Cloudinary image ${publicId}:`, error);
+                cleanupErrors.push(publicId);
+            }
+        }
+
+        res.clearCookie("token");
+        return res.status(200).json({
+            success: true,
+            message: cleanupErrors.length
+                ? "Profile and associated data deleted, but some stored images could not be removed"
+                : "Profile and associated data deleted successfully",
+            cleanupWarnings: cleanupErrors.length
+        });
+    } catch (error) {
+        console.error("Failed to delete profile:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Unable to delete profile"
+        });
+    }
+};

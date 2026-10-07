@@ -1,11 +1,31 @@
 import { useState } from 'react'
+import { useEmailVerify } from '../../service/users/emailVerification'
+import { toast } from 'react-toastify';
 
 const OtpEmailVerification = ({ email, setView }) => {
+    const { isPending, mutate } = useEmailVerify();
     const [otp, setOtp] = useState('')
 
     const handleSubmit = (event) => {
         event.preventDefault();
-        setView('login');
+        if (!otp) {
+            toast.error("Enter the OTP sent in your mail")
+            return;
+        }
+        mutate(
+            { token: otp.trim() },
+            {
+                onSuccess: (data) => {
+                    console.log(data)
+                    toast.success("Email verified successfully");
+                    setView('login');
+                },
+                onError: (error) => {
+                    toast.error(error.message)
+                },
+            }
+        )
+
     }
 
     return (
@@ -25,12 +45,14 @@ const OtpEmailVerification = ({ email, setView }) => {
                         maxLength={6}
                         required
                         value={otp}
-                        onChange={(event) => setOtp(event.target.value.replace(/\D/g, '').slice(0, 6))}
+                        onChange={(event) => setOtp(event.target.value)}
                         placeholder='Enter 6-digit code'
                         className='formInput'
                     />
                 </label>
-                <button type='submit' className='h-12.5 w-full rounded-md bg-primary text-xl font-bold text-white transition-colors hover:bg-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'>
+                <button type='submit'
+                    disabled={isPending}
+                    className='h-12.5 w-full rounded-md bg-primary text-xl font-bold text-white transition-colors hover:bg-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'>
                     Verify email
                 </button>
             </form>
