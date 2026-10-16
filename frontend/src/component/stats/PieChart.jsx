@@ -6,28 +6,19 @@ import {
     Legend,
 } from "chart.js";
 import { Doughnut } from "react-chartjs-2";
-import { todoList } from "../../localData/todoList";
-
 ChartJS.register(
     ArcElement,
     Tooltip,
     Legend
 );
 
-const PieChart = () => {
+const PieChart = ({ item }) => {
     // Calculate status counts from todoList
-    const pending = todoList.filter(
-        (item) => item.status === "Pending"
-    ).length;
+    const pending = item?.totalPending
 
-    const inProgress = todoList.filter(
-        (item) => item.status === "In Progress"
-    ).length;
+    const inProgress = item?.totalInProgress
 
-    const completed = todoList.filter(
-        (item) => item.status === "Completed"
-    ).length;
-
+    const completed = item?.totalCompleted
     const data = {
         labels: ["Pending", "In Progress", "Completed"],
         datasets: [

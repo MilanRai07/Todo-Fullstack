@@ -18,6 +18,9 @@ export const useDeleteTodo = () => {
 
     return useMutation({
         mutationFn: deleteTodo,
-        onSuccess: () => queryClient.invalidateQueries({ queryKey: ["todoList"] })
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["todoList"] });
+            queryClient.invalidateQueries({ queryKey: ["todoStatus"] });
+        }
     });
 };

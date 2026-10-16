@@ -29,6 +29,7 @@ export const usePostTodo = () => {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['todoList'] })
             queryClient.invalidateQueries({ queryKey: ['allTodoList'] })
+            queryClient.invalidateQueries({ queryKey: ['todoStatus'] })
         }
     })
 }
