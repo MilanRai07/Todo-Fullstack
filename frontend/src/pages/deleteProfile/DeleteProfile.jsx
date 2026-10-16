@@ -30,14 +30,14 @@ const DeleteProfile = () => {
     }
 
     return (
-        <main className='p-7'>
+        <main className='p-4 sm:p-5 lg:p-7'>
             <div className='cardBox'>
                 <div className='flex items-center gap-3'>
                     <AlertTriangle size={24} className='text-red-600' />
                     <h1 className='text-lg font-bold text-red-600'>Delete Profile</h1>
                 </div>
 
-                <div className='mt-8 rounded-md border border-red-300 bg-red-50 p-5'>
+                <div className='mt-6 rounded-md border border-red-300 bg-red-50 p-4 sm:mt-8 sm:p-5'>
                     <h2 className='font-semibold text-red-800'>This action is permanent</h2>
                     <p className='mt-2 text-sm text-red-700'>
                         Deleting your profile will permanently remove your account and associated data.
@@ -55,7 +55,7 @@ const DeleteProfile = () => {
                             type='text'
                             value={confirmationText}
                             onChange={(event) => setConfirmationText(event.target.value)}
-                            className='w-full min-h-11.5 sm:min-h-12.5 min-w-50 px-3.5 sm:px-4 bg-white border rounded-xl text-left transition-all duration-200 outline-none focus:outline-none focus-visible:outline-none focus:ring-0 border-gray-300 focus:border-primary hover:border-gray-400'
+                            className='formInput'
                             autoComplete='off'
                         />
                     </div>

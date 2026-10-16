@@ -7,31 +7,35 @@ const ImageUploader = ({
     maxSizeMB = 5,
     onImageChange,
     image,
-    setImage
+    setImage,
+    imageUrl
 }) => {
 
     const [imageError, setImageError] = useState("");
     const [isDragging, setIsDragging] = useState(false);
     const [imagePreview, setImagePreview] = useState("");
+    const imagePreviewUrlRef = useRef("");
     const fileInputRef = useRef(null);
     const inputId = useId();
 
     useEffect(() => {
-        if (!image) {
-            setImagePreview("");
-            return undefined;
-        }
+        return () => {
+            if (imagePreviewUrlRef.current) URL.revokeObjectURL(imagePreviewUrlRef.current);
+        };
+    }, []);
 
-        const previewUrl = URL.createObjectURL(image);
-        setImagePreview(previewUrl);
-        return () => URL.revokeObjectURL(previewUrl);
-    }, [image]);
+    const clearImagePreview = () => {
+        if (imagePreviewUrlRef.current) URL.revokeObjectURL(imagePreviewUrlRef.current);
+        imagePreviewUrlRef.current = "";
+        setImagePreview("");
+    };
 
     const setImageFile = (file) => {
         setImageError("");
         if (!file) return false;
 
         if (!file.type.startsWith("image/")) {
+            clearImagePreview();
             setImage(null);
             onImageChange?.(null);
             setImageError("Choose an image file.");
@@ -39,12 +43,17 @@ const ImageUploader = ({
         }
 
         if (file.size > maxSizeMB * 1024 * 1024) {
+            clearImagePreview();
             setImage(null);
             onImageChange?.(null);
             setImageError(`Image must be ${maxSizeMB} MB or smaller.`);
             return false;
         }
 
+        clearImagePreview();
+        const previewUrl = URL.createObjectURL(file);
+        imagePreviewUrlRef.current = previewUrl;
+        setImagePreview(previewUrl);
         setImage(file);
         onImageChange?.(file);
         return true;
@@ -66,7 +75,7 @@ const ImageUploader = ({
         setImage(null);
         setImageError("");
         onImageChange?.(null);
-        setImagePreview("")
+        clearImagePreview();
         if (fileInputRef.current) fileInputRef.current.value = "";
     };
 
@@ -88,25 +97,41 @@ const ImageUploader = ({
                 className="sr-only"
                 onChange={handleFileChange}
             />
-            {imagePreview ? (
+            {imagePreview || imageUrl ? (
                 <div className="flex items-center gap-4 rounded-xl border border-gray-300 p-3">
                     <img
-                        src={imagePreview}
+                        src={imagePreview || imageUrl}
                         alt={`Selected ${label.toLowerCase()}`}
                         className="h-20 w-20 rounded-lg object-cover"
                     />
                     <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-medium text-gray-900">{image.name}</p>
-                        <p className="mt-1 text-xs text-gray-500">{(image.size / (1024 * 1024)).toFixed(2)} MB</p>
+                        {image ? (
+                            <>
+                                <p className="truncate text-sm font-medium text-gray-900">{image.name}</p>
+                                <p className="mt-1 text-xs text-gray-500">{(image.size / (1024 * 1024)).toFixed(2)} MB</p>
+                            </>
+                        ) : (
+                            <p className="text-sm font-medium text-gray-900">Current task image</p>
+                        )}
                     </div>
-                    <button
-                        type="button"
-                        onClick={removeImage}
-                        aria-label="Remove selected image"
-                        className="rounded-lg p-2 text-gray-500 transition hover:bg-gray-100 hover:text-gray-900"
-                    >
-                        <X size={18} />
-                    </button>
+                    {image ? (
+                        <button
+                            type="button"
+                            onClick={removeImage}
+                            aria-label="Remove selected image"
+                            className="rounded-lg p-2 text-gray-500 transition hover:bg-gray-100 hover:text-gray-900"
+                        >
+                            <X size={18} />
+                        </button>
+                    ) : (
+                        <button
+                            type="button"
+                            onClick={() => fileInputRef.current?.click()}
+                            className="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
+                        >
+                            Replace image
+                        </button>
+                    )}
                 </div>
             ) : (
                 <div

@@ -4,15 +4,20 @@ import "react-datepicker/dist/react-datepicker.css";
 const CustomDatePicker = ({
     selected,
     onChange,
+    canSelectPast = false
 }) => {
+    const minDate = new Date();
+    minDate.setHours(0, 0, 0, 0);
+
     return (
-        <div className="w-full min-w-[300px]">
+        <div className="w-full min-w-0">
             <label className="block mb-3 text-xs sm:text-sm font-semibold text-gray-800">
                 Date
             </label>
             <DatePicker
                 selected={selected}
                 onChange={onChange}
+                minDate={canSelectPast ? null : minDate}
                 placeholderText="yyyy-mm-dd"
                 dateFormat="yyyy-MM-dd"
                 wrapperClassName="w-full"

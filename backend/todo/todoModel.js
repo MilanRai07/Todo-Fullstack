@@ -45,6 +45,10 @@ export const todoSchema = new mongoose.Schema(
         description: {
             type: String,
             trim: true
+        },
+        dueDate: {
+            type: Date,
+            required: true
         }
     },
     {

@@ -5,7 +5,7 @@ import { useState } from "react";
 const ProfileIndex = () => {
     const [showEdit, setShowEdit] = useState(false);
     return (
-        <main className='p-7 '>
+        <main className='p-4 sm:p-5 lg:p-7'>
             <div className="cardBox">
                 {
                     showEdit ? (

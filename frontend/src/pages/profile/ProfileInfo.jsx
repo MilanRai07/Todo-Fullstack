@@ -1,4 +1,4 @@
-import { UserShield } from 'lucide-react'
+import { UserRound, UserShield } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useCurrentUser } from '../../hooks/useCurrentUserHook'
 import ProfileShimmer from '../../component/shimmer/ProfileShimmer';
@@ -45,11 +45,16 @@ const ProfileInfo = ({ setShowEdit }) => {
                             className={` relative z-0 grid place-items-center w-24 h-24 max-md:w-16 max-md:h-16 max-sm:w-14 max-sm:h-14 border-3 border-white rounded-full cursor-not-allowed opacity-70'
                         `}
                         >
-                            <img
-                                src={data?.user?.profileImage?.url || '/img1.jpeg'}
-                                alt="Profile"
-                                className='w-full h-full object-cover overflow-hidden rounded-full'
-                            />
+                            {
+                                data?.user?.profileImage?.url ?
+                                    <img
+                                        src={data?.user?.profileImage?.url}
+                                        alt="Profile"
+                                        className='w-full h-full object-cover overflow-hidden rounded-full'
+                                    /> :
+                                    <UserRound size={36} aria-hidden='true' className='text-white/80' />
+                            }
+
                         </div>
 
                         <p className='text-[20px] font-bold text-white max-sm:text-[18px]'>{data?.user?.name}</p>

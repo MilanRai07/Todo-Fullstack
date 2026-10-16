@@ -3,50 +3,121 @@ import CustomDropdown from '../../component/filters/CustomDropDown'
 import CustomDatePicker from '../../component/filters/CustomDatePicker';
 import ImageUploader from '../../component/ImageUploader'
 import TiptapEditor from '../../component/textEditor/TiptapEditor';
+import { usePostTodo } from '../../service/todoList/postTodo';
+import { priority } from '../../localData/filterOptions';
+import { toast } from 'react-toastify';
 
-const TaskForm = () => {
-    const statuses = ["All", "In Progress", "Completed", "Pending"];
-    const priorities = ["All", "High", "Medium", "Low"];
-    const [selectedStatus, setSelectedStatus] = useState("All");
-    const [selectedPriority, setSelectedPriority] = useState("All");
+let initialData = {
+    title: "",
+    category: "",
+    description: "",
+    priority: "",
+    image: "",
+    dueDate: ""
+}
+
+const TaskForm = ({ categoryData }) => {
+    const { mutate, isPending } = usePostTodo();
+    const [formData, setFormData] = useState(initialData)
+    const [selectedPriority, setSelectedPriority] = useState(priority[0]);
+    const [selectedCategory, setSelectedCategory] = useState(categoryData[0]);
     const [date, setDate] = useState(null);
     const [image, setImage] = useState(null);
-    const [description, setDescription] = useState("");
+    const [editorKey, setEditorKey] = useState(0);
 
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        if (!formData.title) {
+            toast.error("Title is required")
+            return;
+        }
+        if (!date) {
+            toast.error("Date is required")
+            return;
+        }
+        const selectedDate = new Date(date);
+        selectedDate.setHours(0, 0, 0, 0);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        if (selectedDate < today) {
+            toast.error("Due date can't be in the past")
+            return;
+        }
+
+        if (!image) {
+            toast.error("Image is required")
+            return;
+        }
+
+        mutate(
+            {
+                ...formData,
+                priority: selectedPriority?.title || "",
+                category: selectedCategory?._id || "",
+                image: image || "",
+                dueDate: date
+                    ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`
+                    : ""
+            },
+            {
+                onSuccess: () => {
+                    toast.success("Todo added successfully");
+                    setFormData({ ...initialData });
+                    setSelectedPriority(priority[0]);
+                    setSelectedCategory(categoryData[0]);
+                    setDate(null);
+                    setImage(null);
+                    setEditorKey((key) => key + 1);
+                },
+                onError: (err) => {
+                    toast.error(err.message || "Failed to add todo")
+                }
+            }
+        )
+    }
+
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormData({
+            ...formData,
+            [name]: value
+        })
+    }
 
     return (
-        <form className='space-y-10'>
+        <form className='space-y-10' onSubmit={handleSubmit}>
             <div>
                 <input
-                    className="mt-10 w-full min-h-[46px] sm:min-h-[50px] min-w-[200px] px-3.5 sm:px-4 bg-white border 
-                    rounded-xl text-left transition-all duration-200 outline-none 
-                    focus:outline-none focus-visible:outline-none focus:ring-0 border-gray-300 focus:border-primary hover:border-gray-400"
+                    className="formInput mt-10"
                     placeholder="Enter task title"
+                    name="title"
+                    value={formData.title}
+                    onChange={handleChange}
                 />
             </div>
             <ImageUploader
                 image={image}
                 setImage={setImage}
             />
-            <div className="flex justify-between gap-5 p-5 bg-white border border-gray-200 rounded-xl">
-                <CustomDropdown
+            <div className="grid grid-cols-1 gap-4 rounded-xl border border-gray-200 bg-white p-4 sm:grid-cols-2 sm:p-5 xl:grid-cols-3">
+                {/* <CustomDropdown
                     label="Status"
                     value={selectedStatus}
                     options={statuses}
                     onChange={setSelectedStatus}
+                /> */}
+
+                <CustomDropdown
+                    label="Category"
+                    value={selectedCategory}
+                    options={categoryData}
+                    onChange={setSelectedCategory}
                 />
 
                 <CustomDropdown
                     label="Priority"
                     value={selectedPriority}
-                    options={priorities}
-                    onChange={setSelectedPriority}
-                />
-
-                <CustomDropdown
-                    label="Priority"
-                    value={selectedPriority}
-                    options={priorities}
+                    options={priority}
                     onChange={setSelectedPriority}
                 />
 
@@ -60,12 +131,23 @@ const TaskForm = () => {
                     Description
                 </label>
                 <TiptapEditor
-                    content=""
+                    key={editorKey}
+                    content={formData.description}
                     placeholder="Write a description..."
-                    onChange={setDescription}
+                    onChange={(description) =>
+                        setFormData((currentData) => ({
+                            ...currentData,
+                            description
+                        }))
+                    }
                 />
-                <input type="hidden" name="description" value={description} />
             </div>
+
+            <button type='submit'
+                disabled={isPending}
+                className='px-3 py-2 w-fit rounded-md bg-primary text-sm font-bold text-white transition-colors hover:bg-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'>
+                {isPending ? 'Adding...' : 'Add Todo'}
+            </button>
         </form>
     )
 }

@@ -10,6 +10,8 @@
     --tt-bubble: #fff;
     --tt-bubble-ink: #111827;
     margin: 0 auto;
+    min-width: 0;
+    max-width: 100%;
     padding: clamp(20px, 5vw, 48px);
     background: var(--tt-paper);
     color: var(--tt-ink);
@@ -21,8 +23,8 @@
 /* Editor content */
 .tt-content .tiptap {
     outline: none;
-    min-height: 50vh;
-    font-size: 18px;
+    min-height: 30vh;
+    font-size: clamp(15px, 4vw, 18px);
     line-height: 1.75;
     margin-top:40px;
 }
@@ -163,6 +165,7 @@
     border: 1px solid var(--tt-line);
     vertical-align: top;
     position: relative;
+    overflow-wrap: anywhere;
 }
 
 .tt-content .tiptap th {

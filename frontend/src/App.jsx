@@ -14,7 +14,6 @@ import AuthPage from "./pages/authPage/AuthPage";
 import ProfileEmailVerification from "./pages/profile/ProfileEmailVerification";
 import { useCurrentUser } from "./hooks/useCurrentUserHook";
 
-
 function App() {
   const { data, isPending, isError, error, refetch } = useCurrentUser();
   const isAuthenticated = data?.success === true;
@@ -47,18 +46,20 @@ function App() {
           />
           <Route
             path="/"
-            element={isAuthenticated ? <Layout /> : <Navigate to="/login" replace />}
+            element={isAuthenticated ? <Layout image={data?.user?.profileImage} /> : <Navigate to="/login" replace />}
           >
-            <Route index element={<HomeIndex />} />
-            <Route path="/vital" element={<VitalTask />} />
+            <Route index element={<HomeIndex name={data?.user?.name}/>} />
+            <Route path="/missed" element={<VitalTask />} />
             <Route path="/all-tasks" element={<AllTask />} />
-            <Route path="/single-todo" element={<SingleTodo />} />
             <Route path="/add-new-task" element={<AddTask />} />
             <Route path="/categories" element={<Categories />} />
             <Route path="/profile" element={<ProfileIndex />} />
             <Route path="/verify-email" element={<ProfileEmailVerification />} />
             <Route path="/password-change" element={<PasswordChange />} />
             <Route path="/delete-profile" element={<DeleteProfile />} />
+
+            {/* single pages */}
+            <Route path="/single-todo/:id" element={<SingleTodo />} />
           </Route>
         </Routes>
       )}

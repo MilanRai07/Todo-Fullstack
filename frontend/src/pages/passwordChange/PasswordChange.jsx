@@ -33,7 +33,7 @@ const PasswordChange = () => {
     };
 
     return (
-        <main className='p-7'>
+        <main className='p-4 sm:p-5 lg:p-7'>
             <div className="cardBox">
                 <div className='flex justify-between flex-col gap-8'>
                     <div className='flex items-center gap-3'>
@@ -41,7 +41,7 @@ const PasswordChange = () => {
                         <p className='text-lg font-bold text-primary'>Change Password</p>
                     </div>
                 </div>
-                <form onSubmit={handleSubmit} className='mt-10 flex flex-col gap-6'>
+                <form onSubmit={handleSubmit} className='mt-6 flex max-w-2xl flex-col gap-4 sm:mt-10 sm:gap-6'>
                     <input
                         type="password"
                         autoComplete="current-password"
@@ -49,7 +49,7 @@ const PasswordChange = () => {
                         required
                         value={currentPassword}
                         onChange={(event) => setCurrentPassword(event.target.value)}
-                        className='w-full rounded-md border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent'
+                        className='formInput'
                     />
                     <input
                         type="password"
@@ -58,7 +58,7 @@ const PasswordChange = () => {
                         required
                         value={newPassword}
                         onChange={(event) => setNewPassword(event.target.value)}
-                        className='w-full rounded-md border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent'
+                        className='formInput'
                     />
                     <input
                         type="password"
@@ -67,12 +67,12 @@ const PasswordChange = () => {
                         required
                         value={confirmPassword}
                         onChange={(event) => setConfirmPassword(event.target.value)}
-                        className='w-full rounded-md border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent'
+                        className='formInput'
                     />
                     <button
                         type="submit"
                         disabled={isPending}
-                        className='w-fit rounded-md bg-primary px-4 py-2 text-white font-semibold hover:bg-primary/90 transition-colors disabled:cursor-wait disabled:opacity-70'
+                        className='w-fit max-w-full rounded-md bg-primary px-4 py-2 text-white font-semibold hover:bg-primary/90 transition-colors disabled:cursor-wait disabled:opacity-70'
                     >
                         {isPending ? 'Changing...' : 'Change Password'}
                     </button>

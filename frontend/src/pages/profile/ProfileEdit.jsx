@@ -1,14 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
-import { UserShield } from 'lucide-react'
+import { UserRound, UserShield } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useProfileEdit } from '../../service/users/profileEdit'
 import { useProfileImageEdit } from '../../service/users/profileImageEdit'
 import { toast } from 'react-toastify'
 import { useCurrentUser } from '../../hooks/useCurrentUserHook'
-
-const inputClassName = `w-full min-h-[46px] sm:min-h-[50px] min-w-[200px] px-3.5 sm:px-4 bg-white border
-    rounded-xl text-left transition-all duration-200 outline-none
-    focus:outline-none focus-visible:outline-none focus:ring-0 border-gray-300 focus:border-primary hover:border-gray-400`
 
 const ProfileEdit = ({ setShowEdit }) => {
     const { mutateAsync: editProfile, isPending: isProfilePending } = useProfileEdit();
@@ -32,7 +28,7 @@ const ProfileEdit = ({ setShowEdit }) => {
         }
     }, [imagePreview])
 
-    const getProfileImageUrl = () => imagePreview || data?.user?.profileImage?.url || '/img1.jpeg'
+    const getProfileImageUrl = () => imagePreview || data?.user?.profileImage?.url || ""
 
     const handleFileChange = (event) => {
         const image = event.target.files?.[0]
@@ -91,10 +87,10 @@ const ProfileEdit = ({ setShowEdit }) => {
                 </button>
             </div>
 
-            <form onSubmit={handleSubmit} className='mt-10 space-y-10'>
+            <form onSubmit={handleSubmit} className='mt-6 space-y-8 sm:mt-10 sm:space-y-10'>
                 <div className='flex justify-center'>
                     <div className='relative h-24 w-24'>
-                        <div className='h-full w-full overflow-hidden rounded-full border-3 border-primary'>
+                        <div className='h-full w-full overflow-hidden rounded-full border-2 border-primary'>
                             <img
                                 src={getProfileImageUrl()}
                                 alt='Profile'
@@ -105,7 +101,7 @@ const ProfileEdit = ({ setShowEdit }) => {
                             type='button'
                             onClick={() => fileInputRef.current?.click()}
                             aria-label='Choose profile image'
-                            className='absolute top-1/2 right-[-13%] z-10 grid h-[40%] w-[40%] -translate-y-1/2 place-items-center rounded-full bg-white text-[24px] font-extrabold text-mainBlue'
+                            className='absolute top-1/2 right-[-13%] z-10 grid h-[40%] w-[40%] -translate-y-1/2 place-items-center rounded-full shadow-md bg-white text-[24px] font-extrabold text-mainBlue'
                         >
                             +
                         </button>
@@ -119,7 +115,7 @@ const ProfileEdit = ({ setShowEdit }) => {
                     />
                 </div>
 
-                <div className='flex space-between gap-6'>
+                <div className='flex flex-col gap-5 sm:flex-row sm:gap-6'>
                     <div className='flex-1'>
                         <label htmlFor='profile-name' className='mb-2 block text-sm font-semibold text-gray-800'>
                             Name
@@ -130,7 +126,7 @@ const ProfileEdit = ({ setShowEdit }) => {
                             type='text'
                             value={formData.name ?? data?.user?.name ?? ''}
                             onChange={(event) => setFormData({ ...formData, name: event.target.value })}
-                            className={inputClassName}
+                            className='formInput'
                             placeholder='Enter your name'
                         />
                     </div>
@@ -144,7 +140,7 @@ const ProfileEdit = ({ setShowEdit }) => {
                             type='email'
                             value={formData.email ?? data?.user?.email ?? ''}
                             onChange={(event) => setFormData({ ...formData, email: event.target.value })}
-                            className={inputClassName}
+                            className='formInput'
                             placeholder='Enter your email address'
                         />
                     </div>

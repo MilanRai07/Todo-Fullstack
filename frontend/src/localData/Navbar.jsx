@@ -8,6 +8,7 @@ import {
     UserRoundPen,
     KeyRound,
     Trash2,
+    LogOut,
 } from "lucide-react";
 
 export const NavbarItem = [
@@ -18,8 +19,8 @@ export const NavbarItem = [
     },
     {
         icon: <Zap />,
-        title: "Vital Tasks",
-        href: "/vital",
+        title: "Missed Tasks",
+        href: "/missed",
     },
     {
         icon: <ListTodo />,
@@ -54,6 +55,11 @@ export const NavbarItem = [
                 icon: <Trash2 />,
                 title: "Delete Profile",
                 href: "/delete-profile",
+            },
+            {
+                icon: <LogOut />,
+                title: "Log Out",
+                action: "logout",
             },
         ],
     },

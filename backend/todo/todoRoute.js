@@ -1,7 +1,7 @@
 import express from 'express';
-import { getTodo, postTodo, getSingleTodo, deleteTodo, updateTodo } from './todoController.js';
+import { getTodo, postTodo, getSingleTodo, deleteTodo, updateTodo, missedTodo, todoStatus } from './todoController.js';
 import upload from '../middleware/upload.js';
-import {verifyToken} from '../middleware/verifyToken.js';
+import { verifyToken } from '../middleware/verifyToken.js';
 
 const router = express.Router();
 
@@ -14,9 +14,12 @@ router.use(verifyToken);//this repplaces the below each middleware added code, i
 // router.delete("/todo/:id", verifyToken, deleteTodo);
 // router.put("/todo/:id", verifyToken, updateTodo);
 router.get('/', getTodo);
+router.get('/missed', missedTodo);
 router.post('/', upload.single('image'), postTodo);
+router.get('/todo-status', todoStatus);
 router.get('/:id', getSingleTodo)
 router.delete('/:id', deleteTodo)
-router.put('/:id', upload.single('image'), updateTodo)
+router.put('/:id', upload.single('image'), updateTodo);
+
 
 export default router;

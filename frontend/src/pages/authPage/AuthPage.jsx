@@ -28,7 +28,7 @@ const AuthPage = () => {
                         <span className='grid h-12 w-12 place-items-center rounded-xl bg-primary text-white'>
                             <CheckSquare size={28} strokeWidth={2.5} />
                         </span>
-                        <span className='text-4xl font-bold tracking-tight text-primary'>ToDo</span>
+                        <span className='text-4xl font-bold tracking-tight text-primary'>Your first ToDo App </span>
                     </div>
                     <h1 className='text-[28px] leading-snug text-[#1c1e21] max-sm:text-2xl'>
                         Make space for what matters.

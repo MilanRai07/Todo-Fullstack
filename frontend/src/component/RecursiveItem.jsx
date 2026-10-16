@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { ChevronRight } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 
-const RecursiveItem = ({ item, level = 0 }) => {
+const RecursiveItem = ({ item, level = 0, onNavigate, onLogout, logoutPending }) => {
     const [open, setOpen] = useState(false);
 
     const hasChildren = item.children && item.children.length > 0;
@@ -16,6 +16,8 @@ const RecursiveItem = ({ item, level = 0 }) => {
                     size={24}
                     className={`shrink-0 transition-transform duration-200 ${open ? 'rotate-90' : ''}`}
                 />
+            ) : item.action === 'logout' && logoutPending ? (
+                <span className="ml-auto text-xs font-normal">Logging out...</span>
             ) : (
                 <span className="w-4 shrink-0" />
             )}
@@ -40,11 +42,22 @@ const RecursiveItem = ({ item, level = 0 }) => {
                 >
                     {itemContent}
                 </button>
+            ) : item.action === 'logout' ? (
+                <button
+                    type="button"
+                    onClick={onLogout}
+                    disabled={logoutPending}
+                    className={`${itemClassName()} disabled:cursor-wait disabled:opacity-70`}
+                    style={{ paddingLeft: `${level * 16 + 12}px` }}
+                >
+                    {itemContent}
+                </button>
             ) : (
                 <NavLink
                     to={item.href}
                     className={({ isActive }) => itemClassName(isActive)}
                     style={{ paddingLeft: `${level * 16 + 12}px` }}
+                    onClick={onNavigate}
                 >
                     {itemContent}
                 </NavLink>
@@ -58,6 +71,9 @@ const RecursiveItem = ({ item, level = 0 }) => {
                             key={index}
                             item={child}
                             level={level + 1}
+                            onNavigate={onNavigate}
+                            onLogout={onLogout}
+                            logoutPending={logoutPending}
                         />
                     ))}
                 </div>

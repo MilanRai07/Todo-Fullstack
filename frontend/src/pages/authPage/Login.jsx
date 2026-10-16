@@ -21,8 +21,7 @@ const Login = ({ onForgotPassword, onCreateAccount }) => {
             { email: emailValue, password: passValue },
             {
                 onSuccess: (data) => {
-                    console.log(data)
-                    toast.success("Logged in successfully")
+                    toast.success(data?.message || "Logged in successfully")
                 },
                 onError: (error) => {
                     toast.error(error.message)
@@ -54,7 +53,7 @@ const Login = ({ onForgotPassword, onCreateAccount }) => {
                 Forgot password?
             </button>
             <div className='my-5 border-t border-[#dadde1]' />
-            <button type='button' onClick={onCreateAccount} className='mx-auto block rounded-md bg-[#42b72a] px-5 py-3 font-bold text-white transition-colors hover:bg-[#36a420]'>
+            <button type='button' onClick={onCreateAccount} className='mx-auto block rounded-md bg-secondary hover:bg-primary px-5 py-3 font-bold text-white transition-colors hover:bg-[#36a420]'>
                 Create new account
             </button>
         </>

@@ -9,7 +9,7 @@ const initialData = {
     password: ''
 }
 
-const Signup = ({ setView }) => {
+const Signup = ({ setView, setSignedEmail }) => {
     const { mutate, isPending } = useSignUp();
     const [formData, setFormData] = useState(initialData)
     const handleSubmit = (event) => {
@@ -27,6 +27,7 @@ const Signup = ({ setView }) => {
                 onSuccess: (data) => {
                     console.log(data);
                     toast.success("Account created successfully");
+                    setSignedEmail(formData.email)
                     setView('verifyEmail');
                 },
                 onError: (err) => {

@@ -29,7 +29,7 @@ const CustomDropdown = ({ label, value, options, onChange }) => {
     };
 
     return (
-        <div ref={dropdownRef} className="relative w-full">
+        <div ref={dropdownRef} className="relative w-full min-w-0">
             <label className={`block mb-3 text-xs sm:text-sm font-semibold text-gray-800`}>
                 {label}
             </label>
@@ -40,7 +40,7 @@ const CustomDropdown = ({ label, value, options, onChange }) => {
                 onClick={() => setIsOpen((prev) => !prev)}
                 className={`
                     w-full
-    min-h-[46px] sm:min-h-[50px] min-w-[200px]
+    min-h-[46px] sm:min-h-[50px] min-w-0
     px-3.5 sm:px-4
     flex items-center justify-between
     gap-3
@@ -60,7 +60,7 @@ const CustomDropdown = ({ label, value, options, onChange }) => {
                 `}
             >
                 <span className="truncate text-sm sm:text-[15px] font-medium text-gray-600">
-                    {value}
+                    {value?.title}
                 </span>
 
                 <svg
@@ -105,11 +105,11 @@ const CustomDropdown = ({ label, value, options, onChange }) => {
                 >
                     <div className="max-h-60 overflow-y-auto p-1.5">
                         {options.map((option) => {
-                            const isSelected = option === value;
+                            const isSelected = option._id === value._id
 
                             return (
                                 <button
-                                    key={option}
+                                    key={option._id}
                                     type="button"
                                     onClick={() => handleSelect(option)}
                                     className={`
@@ -128,7 +128,7 @@ const CustomDropdown = ({ label, value, options, onChange }) => {
                                     `}
                                 >
                                     <span className="truncate">
-                                        {option}
+                                        {option.title}
                                     </span>
 
                                     {isSelected && (

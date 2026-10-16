@@ -6,9 +6,9 @@ import deleteFromCloudinary from "../utils/cloudinary/deleteFromCloudinary.js";
 
 //to post the list
 export const postTodo = async (req, res) => {
-    if (!req.file) {
-        return res.status(400).json({ message: "Image is required" });
-    }
+    // if (!req.file) {
+    //     return res.status(400).json({ message: "Image is required" });
+    // }
 
     let uploadedImage = null;
 
@@ -39,6 +39,7 @@ export const postTodo = async (req, res) => {
             description: req.body.description,
             priority: req.body.priority,
             image: uploadedImage,
+            dueDate: req.body.dueDate,
             userId: req.userId // Assign the userId from the request (set by verifyToken middleware)
         });
 
@@ -59,9 +60,12 @@ export const postTodo = async (req, res) => {
 export const getTodo = async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 3;
+        const limit = parseInt(req.query.limit) || 20;
         const title = req.query.title || "";
         const status = req.query.status || "";
+        const priority = req.query.priority || "";
+        const dueDate = req.query.dueDate || "";
+        const category = req.query.category || "";
         const sort = req.query.sort === "asc" ? 1 : -1;
         const skip = (page - 1) * limit;
 
@@ -71,6 +75,32 @@ export const getTodo = async (req, res) => {
         }
         if (status) {
             filter.status = status
+        }
+        if (priority) {
+            filter.priority = priority
+        }
+        if (dueDate) {
+            if (/^\d{4}-\d{2}-\d{2}$/.test(dueDate)) {
+                const startOfDay = new Date(`${dueDate}T00:00:00.000Z`);
+                if (Number.isNaN(startOfDay.getTime()) || startOfDay.toISOString().slice(0, 10) !== dueDate) {
+                    return res.status(400).json({ message: "Invalid due date" });
+                }
+                const offset = req.query.dueDateOffset === undefined
+                    ? 0
+                    : Number(req.query.dueDateOffset);
+                if (!Number.isInteger(offset) || Math.abs(offset) > 840) {
+                    return res.status(400).json({ message: "Invalid due date offset" });
+                }
+                startOfDay.setUTCMinutes(startOfDay.getUTCMinutes() + offset);
+                const endOfDay = new Date(startOfDay);
+                endOfDay.setUTCDate(endOfDay.getUTCDate() + 1);
+                filter.dueDate = { $gte: startOfDay, $lt: endOfDay };
+            } else {
+                filter.dueDate = dueDate
+            }
+        }
+        if (category) {
+            filter.category = category
         }
         filter.userId = req.userId; // Filter todos by the authenticated user's ID
 
@@ -106,7 +136,7 @@ export const getSingleTodo = async (req, res) => {
         const todo = await TodoModel.findOne({
             _id: req.params.id,
             userId: req.userId,
-        });
+        }).populate("category", "title");
         if (!todo) {
             return res.status(404).json({
                 message: "Todo item not found"
@@ -217,3 +247,65 @@ export const updateTodo = async (req, res) => {
         res.status(500).json({ message: err.message });
     }
 };
+
+//get missed task
+export const missedTodo = async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 20;
+        const skip = (page - 1) * limit;
+        const today = new Date();
+        today.setUTCHours(0, 0, 0, 0);
+        const filter = {
+            userId: req.userId,
+            dueDate: { $lt: today },
+        };
+
+        const todos = await TodoModel.find(filter)
+            .sort({ dueDate: 1 })
+            .skip(skip)
+            .limit(limit)
+            .populate("category");
+        const totalItem = await TodoModel.countDocuments(filter);
+        const totalPage = Math.ceil(totalItem / limit);
+
+        res.json({
+            success: true,
+            items: todos,
+            pagination: {
+                currentPage: page,
+                totalPage,
+                totalItem,
+                limit,
+                hasNextPage: page < totalPage,
+            },
+        });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
+//todo task status
+export const todoStatus = async (req, res) => {
+    try {
+        const userId = req.userId;
+        const [totalPending, totalCompleted, totalInProgress] =
+            await Promise.all([
+                TodoModel.countDocuments({ userId, status: "Pending" }),
+                TodoModel.countDocuments({ userId, status: "Completed" }),
+                TodoModel.countDocuments({ userId, status: "In Progress" })
+            ]);
+
+        return res.status(200).json({
+            status: 'success',
+            data: {
+                totalPending,
+                totalCompleted,
+                totalInProgress
+            }
+        });
+
+    } catch (err) {
+        res.status(500).json({ message: err.message })
+    }
+}
