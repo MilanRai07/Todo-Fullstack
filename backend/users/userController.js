@@ -62,7 +62,8 @@ export const signUp = async (req, res) => {
         })
 
     } catch (err) {
-
+        console.error("Signup error:", err);
+        return res.status(400).json({ success: false, message: err.message });
     }
 }
 //For verfiication of the user's form /verify-email endpoint
